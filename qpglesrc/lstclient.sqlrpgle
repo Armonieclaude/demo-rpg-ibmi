@@ -21,6 +21,7 @@ CTL-OPT COPYRIGHT('(C) ARMONIE 2026.')
 Dcl-S wNom    Char(30);
 Dcl-S wPrenom Char(30);
 Dcl-S wMsg    Char(52);
+dcl-s message char(10) inz('git');
 
 // ---------------------------------------------------------------
 // Options SQL
@@ -48,6 +49,8 @@ EXEC SQL OPEN C1;
 
 // Première lecture
 EXEC SQL FETCH C1 INTO :wNom, :wPrenom;
+
+dsply message;
 
 // Boucle de lecture
 DoW SQLCOD = 0;
