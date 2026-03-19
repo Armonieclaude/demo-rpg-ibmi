@@ -1,0 +1,25 @@
+/* ============================================================ */
+/* Programme : BUILD                                             */
+/* Objet     : Compilation du projet DEMOGIT                     */
+/* Auteur    : Sylvain AKTEPE  NOTOS (Groupe Armonie)           */
+/* Date      : Mars 2026                                         */
+/* ============================================================ */
+PGM
+
+  /* Compilation du programme LSTCLIENT */
+  CRTSQLRPGI OBJ(DEMOGIT/LSTCLIENT) +
+             SRCSTMF('/home/SAKTEPE/demo-rpg-ibmi/qrpglesrc/lstclient.sqlrpgle') +
+             COMMIT(*NONE) +
+             DBGVIEW(*SOURCE) +
+             OPTION(*EVENTF) +
+             REPLACE(*YES)
+
+  SNDPGMMSG  MSG('LSTCLIENT compilé avec succès') +
+             TOPGMQ(*EXT) MSGTYPE(*COMP)
+
+  MONMSG     MSGID(CPF0000) EXEC(DO)
+    SNDPGMMSG  MSG('Erreur compilation LSTCLIENT') +
+               TOPGMQ(*EXT) MSGTYPE(*ESCAPE)
+  ENDDO
+
+ENDPGM
