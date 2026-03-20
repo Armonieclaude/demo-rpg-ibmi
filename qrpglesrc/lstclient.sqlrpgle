@@ -21,7 +21,7 @@ CTL-OPT COPYRIGHT('(C) ARMONIE 2026.')
 Dcl-S wNom    Char(30);
 Dcl-S wPrenom Char(30);
 Dcl-S wMsg    Char(52);
-dcl-s message char(10) inz('git oks');
+dcl-s message char(10) inz('git');
 
 // ---------------------------------------------------------------
 // Options SQL

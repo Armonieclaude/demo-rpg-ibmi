@@ -1,0 +1,137 @@
+# ============================================================
+# CI/CD Pipeline — Demo RPG IBM i
+# Auteur : Sylvain AKTEPE — NOTOS (Groupe Armonie)
+# ============================================================
+# Workflow :
+#   dev → PR → recette (validation + revue)
+#   recette → PR → main (déploiement production)
+# ============================================================
+
+name: Validation PR
+
+on:
+  pull_request:
+    branches: [recette, main]
+
+jobs:
+  validate:
+    name: Contrôles qualité
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Vérification structure projet
+        run: |
+          echo "🔍 Vérification de la structure du projet..."
+          errors=0
+
+          # Vérifier que les dossiers sources existent
+          for dir in qrpglesrc qddssrc qclsrc; do
+            if [ -d "$dir" ]; then
+              echo "✅ Dossier $dir présent"
+            else
+              echo "❌ Dossier $dir manquant"
+              errors=$((errors + 1))
+            fi
+          done
+
+          # Vérifier que les fichiers RPG existent
+          rpg_count=$(find qrpglesrc -name "*.sqlrpgle" -o -name "*.rpgle" 2>/dev/null | wc -l)
+          echo "📄 $rpg_count source(s) RPG trouvé(s)"
+
+          if [ "$rpg_count" -eq 0 ]; then
+            echo "❌ Aucun source RPG trouvé"
+            errors=$((errors + 1))
+          fi
+
+          if [ $errors -gt 0 ]; then
+            echo "❌ $errors erreur(s) détectée(s)"
+            exit 1
+          fi
+
+          echo "✅ Structure projet valide"
+
+      - name: Vérification sources RPG
+        run: |
+          echo "🔍 Analyse des sources RPG..."
+
+          for file in $(find qrpglesrc -name "*.sqlrpgle" -o -name "*.rpgle"); do
+            echo "--- Analyse de $file ---"
+            filename=$(basename "$file")
+
+            # Vérifier la présence de **FREE
+            if head -1 "$file" | grep -q "^\*\*FREE"; then
+              echo "✅ $filename : format full free"
+            else
+              echo "⚠️  $filename : pas en full free (première ligne != **FREE)"
+            fi
+
+            # Vérifier la présence de CTL-OPT
+            if grep -q "CTL-OPT" "$file"; then
+              echo "✅ $filename : CTL-OPT présent"
+            else
+              echo "⚠️  $filename : CTL-OPT manquant"
+            fi
+
+            # Vérifier la présence de *InLR
+            if grep -qi "\*inlr" "$file"; then
+              echo "✅ $filename : *InLR présent"
+            else
+              echo "⚠️  $filename : *InLR manquant — le programme ne se terminera pas proprement"
+            fi
+
+            # Vérifier les SQL SET OPTION
+            if grep -qi "SET OPTION" "$file"; then
+              echo "✅ $filename : SQL SET OPTION présent"
+            else
+              echo "ℹ️  $filename : pas de SQL SET OPTION (OK si pas de SQL embarqué)"
+            fi
+
+            # Compter les lignes
+            lines=$(wc -l < "$file")
+            echo "📏 $filename : $lines lignes"
+            echo ""
+          done
+
+      - name: Vérification SQL
+        run: |
+          echo "🔍 Analyse des scripts SQL..."
+
+          for file in $(find qddssrc -name "*.sql" 2>/dev/null); do
+            filename=$(basename "$file")
+            echo "--- Analyse de $file ---"
+
+            # Vérifier la présence de CREATE TABLE
+            tables=$(grep -ci "CREATE TABLE" "$file" || true)
+            echo "📊 $filename : $tables instruction(s) CREATE TABLE"
+
+            # Vérifier la présence de INSERT
+            inserts=$(grep -ci "INSERT INTO" "$file" || true)
+            echo "📊 $filename : $inserts instruction(s) INSERT"
+
+            # Vérifier qu'il n'y a pas de DROP TABLE sans filet
+            if grep -qi "DROP TABLE" "$file"; then
+              echo "⚠️  $filename : contient DROP TABLE — vérifier que c'est intentionnel"
+            fi
+
+            echo ""
+          done
+
+      - name: Résumé
+        run: |
+          echo "============================================"
+          echo "📋 RÉSUMÉ DE LA VALIDATION"
+          echo "============================================"
+          echo "Branche source : ${{ github.head_ref }}"
+          echo "Branche cible  : ${{ github.base_ref }}"
+          echo "Auteur PR      : ${{ github.actor }}"
+          echo "============================================"
+          echo ""
+
+          # Résumé des fichiers modifiés
+          echo "📁 Fichiers dans le projet :"
+          find . -not -path './.git/*' -type f | sort
+          echo ""
+          echo "✅ Validation terminée avec succès"
