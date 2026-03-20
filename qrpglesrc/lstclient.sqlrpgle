@@ -2,7 +2,7 @@
 // ============================================================
 // Programme : LSTCLIENT
 // Objet     : Liste les clients de la table DEMOGIT.CLIENT
-// Auteur    : Sylvain AKTEPE  NOTOS (Groupe Armonie)
+// Auteur    : Sylvain AKTEPE  NOTOS (Groupe Armonie)
 // Date      : Mars 2026
 // Compil    : CRTSQLRPGI OBJ(DEMOGIT/LSTCLIENT)
 //             SRCSTMF('/home/SAKTEPE/demo-rpg-ibmi/qrpglesrc/lstclient.sqlrpgle')
@@ -21,6 +21,7 @@ CTL-OPT COPYRIGHT('(C) ARMONIE 2026.')
 Dcl-S wNom    Char(25);
 Dcl-S wPrenom Char(25);
 Dcl-S wMsg    Char(52);
+dcl-s attendre  char(1);  // Variable "pause"
 dcl-s message char(10) inz('git');
 
 // ---------------------------------------------------------------
@@ -50,12 +51,12 @@ EXEC SQL OPEN C1;
 // Première lecture
 EXEC SQL FETCH C1 INTO :wNom, :wPrenom;
 
-dsply message;
+dsply message '' attendre;
 
 // Boucle de lecture
 DoW SQLCOD = 0;
   wMsg = %TrimR(wPrenom) + ' ' + %TrimR(wNom);
-  Dsply wMsg;
+  Dsply wMsg '' attendre;
   EXEC SQL FETCH C1 INTO :wNom, :wPrenom;
 EndDo;
 
