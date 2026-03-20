@@ -18,9 +18,9 @@ CTL-OPT COPYRIGHT('(C) ARMONIE 2026.')
 // ---------------------------------------------------------------
 // Déclaration des variables
 // ---------------------------------------------------------------
-Dcl-S wNom    Char(30);
-Dcl-S wPrenom Char(30);
-Dcl-S wMsg    Char(52);
+Dcl-S wNom    Char(25);
+Dcl-S wPrenom Char(25);
+Dcl-S wMsg    Char(50);
 dcl-s attendre  char(1);  // Variable "pause"
 dcl-s message char(10) inz('git');
 
